@@ -471,18 +471,41 @@ export const InvokeContractForm = ({
 
 		const result = simulateResult || submitResult
 
+		const nonVoidReturnValues = isSuccessfulSimulation
+			? (simulateResult as Api.RawSimulateTransactionResponse).results
+					?.filter(
+						(r): r is typeof r & { returnValueJson: unknown } =>
+							"returnValueJson" in r && r.returnValueJson !== "void",
+					)
+					.map((r) => r.returnValueJson) ?? []
+			: []
+
 		const simulationSummary = isSuccessfulSimulation ? (
-			<Alert variant="success" placement="inline" title="Successful Simulation">
-				{`The Simulation succeeded with
-        ${
-					(
-						simulateResult as Api.RawSimulateTransactionResponse
-					).results?.filter(
-						(r) => "returnValueJson" in r && r.returnValueJson !== "void",
-					).length || 0
-				}
-        returned value(s).`}
-			</Alert>
+			<>
+				<Alert variant="success" placement="inline" title="Successful Simulation">
+					{`The Simulation succeeded with ${nonVoidReturnValues.length} returned value(s).`}
+				</Alert>
+				{nonVoidReturnValues.length > 0 && (
+					<div
+						style={{
+							margin: "0.75rem 0",
+							padding: "0.75rem 1rem",
+							backgroundColor: "var(--sds-clr-gray-03)",
+							borderRadius: "0.5rem",
+							border: "1px solid var(--sds-clr-green-06)",
+						}}
+					>
+						<Text size="sm" as="div" weight="bold">
+							Return Value:
+						</Text>
+						{nonVoidReturnValues.map((v, i) => (
+							<pre key={i} style={{ whiteSpace: "pre-wrap", margin: "0.25rem 0" }}>
+								{typeof v === "object" ? JSON.stringify(v, null, 2) : String(v)}
+							</pre>
+						))}
+					</div>
+				)}
+			</>
 		) : isFailedSimulation ? (
 			<Alert variant="error" placement="inline" title="Simulation Failed">
 				{simulateResult?.error}`
