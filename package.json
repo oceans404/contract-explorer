@@ -15,9 +15,14 @@
     }
   },
   "files": ["dist"],
+  "bin": {
+    "contract-explorer": "./dist/server/index.cjs"
+  },
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "dev": "npm run build && run-p -l dev:watch dev:server",
+    "dev:watch": "tsup --watch",
+    "dev:server": "node --watch dist/server/index.cjs",
     "format": "prettier . --write",
     "lint": "eslint .",
     "prepack": "run-p -l format lint typecheck",
