@@ -5,6 +5,7 @@ import {
 	type ContractData,
 	type ContractSectionName,
 } from "../types/types"
+import { allowHttp } from "./allowHttp"
 import { prettifyJsonString } from "./prettifyJsonString"
 import { decode_stream, encode, initialize } from "./StellarXdr"
 
@@ -54,7 +55,7 @@ export const loadContractMetadata = async (
 
 const loadWasmHash = async (contractId: string, rpcUrl: string) => {
 	try {
-		const server = new Server(rpcUrl, { allowHttp: true })
+		const server = new Server(rpcUrl, { allowHttp: allowHttp(rpcUrl) })
 
 		const contractLedgerKey = new Contract(contractId).getFootprint()
 		const response = await server.getLedgerEntries(contractLedgerKey)
@@ -78,7 +79,7 @@ const loadWasmHash = async (contractId: string, rpcUrl: string) => {
 
 const loadWasmBinary = async (wasmHash: string, rpcUrl: string) => {
 	try {
-		const server = new Server(rpcUrl, { allowHttp: true })
+		const server = new Server(rpcUrl, { allowHttp: allowHttp(rpcUrl) })
 
 		return await server.getContractWasmByHash(wasmHash, "hex")
 	} catch (error) {

@@ -6,6 +6,7 @@ import {
 	type PrepareRpcErrorResponse,
 	type PrepareRpcResponse,
 } from "../types/types"
+import { allowHttp } from "../util/allowHttp"
 import { isEmptyObject } from "../util/isEmptyObject"
 
 type PrepareRpcTxProps = {
@@ -36,7 +37,7 @@ export const useRpcPrepareTx = () => {
 				)
 				const rpcServer = new StellarRpc.Server(rpcUrl, {
 					headers: isEmptyObject(headers) ? undefined : { ...headers },
-					allowHttp: new URL(rpcUrl).hostname === "localhost",
+					allowHttp: allowHttp(rpcUrl),
 				})
 				const preparedTx = await rpcServer.prepareTransaction(transaction)
 

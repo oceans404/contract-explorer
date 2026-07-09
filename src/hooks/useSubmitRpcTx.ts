@@ -5,6 +5,7 @@ import {
 	type SubmitRpcError,
 	type SubmitRpcResponse,
 } from "../types/types"
+import { allowHttp } from "../util/allowHttp"
 import { delay } from "../util/delay"
 import { isEmptyObject } from "../util/isEmptyObject"
 
@@ -34,7 +35,7 @@ export const useSubmitRpcTx = () => {
 				)
 				const rpcServer = new StellarRpc.Server(rpcUrl, {
 					headers: isEmptyObject(headers) ? undefined : { ...headers },
-					allowHttp: new URL(rpcUrl).hostname === "localhost",
+					allowHttp: allowHttp(rpcUrl),
 				})
 				const sentTx = await rpcServer.sendTransaction(transaction)
 
