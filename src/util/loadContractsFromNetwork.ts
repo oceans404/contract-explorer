@@ -1,6 +1,7 @@
 import { Client } from "@stellar/stellar-sdk/contract"
 import { type Network } from "../types/types"
-import { type ContractMap, type Contracts } from "./loadContracts"
+import { allowHttp } from "./allowHttp"
+import { type ContractMap, type Contracts, toContracts } from "./loadContracts"
 
 /**
  * Load contracts from the network by fetching their specs via RPC.
@@ -22,20 +23,29 @@ export const loadContractsFromNetwork = async (
 	const loaded: ContractMap = {}
 	const failed: Record<string, string> = {}
 
-	for (const [name, contractId] of Object.entries(contractEntries)) {
-		try {
-			const client = await Client.from({
+	// Each spec fetch is an independent RPC round trip, so run them concurrently.
+	// Results are applied in entry order, keeping `contractNames` deterministic.
+	const entries = Object.entries(contractEntries)
+	const results = await Promise.allSettled(
+		entries.map(([, contractId]) =>
+			Client.from({
 				contractId,
 				rpcUrl: network.rpcUrl,
 				networkPassphrase: network.passphrase,
-				allowHttp: network.rpcUrl.startsWith("http://"),
-			})
-			loaded[name] = { default: client }
-		} catch (error) {
+				allowHttp: allowHttp(network.rpcUrl),
+			}),
+		),
+	)
+
+	entries.forEach(([name], i) => {
+		const result = results[i]
+		if (result.status === "fulfilled") {
+			loaded[name] = { default: result.value }
+		} else {
+			const error: unknown = result.reason
 			failed[name] = error instanceof Error ? error.message : String(error)
 		}
-	}
+	})
 
-	const contractNames = [...Object.keys(loaded), ...Object.keys(failed)]
-	return { loaded, failed, contractNames }
+	return toContracts(loaded, failed)
 }
