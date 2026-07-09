@@ -21,8 +21,10 @@
     "contract-explorer": "./dist/server/index.cjs"
   },
   "scripts": {
-    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
-    "dev": "npm run build && run-p -l dev:watch dev:server",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "prebuild": "npm run clean",
+    "build": "tsup",
+    "dev": "npm run build && run-p -l --race dev:watch dev:server",
     "dev:watch": "tsup --watch",
     "dev:server": "node --watch dist/server/index.cjs",
     "test": "vitest run",
