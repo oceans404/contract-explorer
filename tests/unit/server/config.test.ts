@@ -24,16 +24,38 @@ const mockReadFileSync = vi.mocked(readFileSync)
 
 const originalArgv = process.argv
 const originalExit = process.exit
+const originalError = console.error
+
+/**
+ * The real process.exit never returns, so resolveConfig's code after a fail()
+ * is unreachable. A plain vi.fn() would let execution fall through into that
+ * unreachable code; throwing keeps the mock faithful to `never`.
+ */
+class ProcessExit extends Error {
+	constructor(readonly code?: number) {
+		super(`process.exit(${code})`)
+	}
+}
+
+/** Run resolveConfig expecting it to bail out via process.exit(1). */
+const expectExit = (fn: () => unknown) => {
+	expect(fn).toThrow(ProcessExit)
+	expect(process.exit).toHaveBeenCalledWith(1)
+}
 
 beforeEach(() => {
 	process.argv = ["node", "index.js"]
 	mockExistsSync.mockReturnValue(false)
-	process.exit = vi.fn() as never
+	process.exit = vi.fn((code?: number) => {
+		throw new ProcessExit(code)
+	}) as never
+	console.error = vi.fn()
 })
 
 afterEach(() => {
 	process.argv = originalArgv
 	process.exit = originalExit
+	console.error = originalError
 	vi.clearAllMocks()
 })
 
@@ -76,6 +98,45 @@ describe("resolveConfig — CLI args", () => {
 		expect(config.port).toBe(4000)
 	})
 
+	it("rejects a non-numeric --port instead of listening on NaN", () => {
+		process.argv = ["node", "index.js", "--contract", "t:C", "--port", "abc"]
+		expectExit(resolveConfig)
+	})
+
+	it("rejects an out-of-range --port", () => {
+		process.argv = ["node", "index.js", "--contract", "t:C", "--port", "99999"]
+		expectExit(resolveConfig)
+	})
+
+	it("rejects an unknown --network instead of silently using local", () => {
+		process.argv = [
+			"node",
+			"index.js",
+			"--contract",
+			"t:C",
+			"--network",
+			"tesnet",
+		]
+		expectExit(resolveConfig)
+	})
+
+	it("rejects a --contract value with no colon rather than eating the next flag", () => {
+		process.argv = [
+			"node",
+			"index.js",
+			"--contract",
+			"token",
+			"--network",
+			"testnet",
+		]
+		expectExit(resolveConfig)
+	})
+
+	it("rejects a --contract value with an empty contract id", () => {
+		process.argv = ["node", "index.js", "--contract", "token:"]
+		expectExit(resolveConfig)
+	})
+
 	it("resolves well-known local network by default", () => {
 		process.argv = ["node", "index.js", "--contract", "t:C"]
 		const config = resolveConfig()
@@ -116,8 +177,7 @@ describe("resolveConfig — CLI args", () => {
 
 	it("calls process.exit(1) when no contracts are provided", () => {
 		process.argv = ["node", "index.js"]
-		resolveConfig()
-		expect(process.exit).toHaveBeenCalledWith(1)
+		expectExit(resolveConfig)
 	})
 })
 

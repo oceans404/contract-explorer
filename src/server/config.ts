@@ -1,36 +1,73 @@
+import { Networks } from "@stellar/stellar-sdk"
 import { existsSync, readFileSync } from "fs"
 import { resolve } from "path"
 import { type Network, type NetworkType } from "../types/types"
 
-const KNOWN_NETWORKS: Record<string, Network> = {
+const KNOWN_NETWORKS: Record<NetworkType, Network> = {
 	local: {
 		id: "local",
 		label: "Local",
 		rpcUrl: "http://localhost:8000/rpc",
 		horizonUrl: "http://localhost:8000",
-		passphrase: "Standalone Network ; February 2017",
+		passphrase: Networks.STANDALONE,
 	},
 	testnet: {
 		id: "testnet",
 		label: "Testnet",
 		rpcUrl: "https://soroban-testnet.stellar.org",
 		horizonUrl: "https://horizon-testnet.stellar.org",
-		passphrase: "Test SDF Network ; September 2015",
+		passphrase: Networks.TESTNET,
 	},
 	mainnet: {
 		id: "mainnet",
 		label: "Mainnet",
 		rpcUrl: "https://rpc.stellar.org",
 		horizonUrl: "https://horizon.stellar.org",
-		passphrase: "Public Global Stellar Network ; September 2015",
+		passphrase: Networks.PUBLIC,
 	},
 	futurenet: {
 		id: "futurenet",
 		label: "Futurenet",
 		rpcUrl: "https://rpc-futurenet.stellar.org",
 		horizonUrl: "https://horizon-futurenet.stellar.org",
-		passphrase: "Test SDF Future Network ; October 2022",
+		passphrase: Networks.FUTURENET,
 	},
+}
+
+const NETWORK_NAMES = Object.keys(KNOWN_NETWORKS) as NetworkType[]
+
+const isNetworkType = (name: string): name is NetworkType =>
+	Object.prototype.hasOwnProperty.call(KNOWN_NETWORKS, name)
+
+function fail(message: string): never {
+	console.error(message)
+	process.exit(1)
+}
+
+/**
+ * Parse a `--port` value. Rejects NaN and out-of-range values, which would
+ * otherwise surface as an ERR_SOCKET_BAD_PORT crash inside `server.listen`.
+ */
+function parsePort(value: string): number {
+	const port = Number(value)
+	if (!Number.isInteger(port) || port < 0 || port > 65535) {
+		fail(`Error: invalid --port "${value}". Expected an integer 0-65535.`)
+	}
+	return port
+}
+
+/** Parse a `--contract name:CONTRACT_ID` value. */
+function parseContract(value: string): [string, string] {
+	const sep = value.indexOf(":")
+	const name = value.slice(0, sep)
+	const contractId = value.slice(sep + 1)
+	if (sep <= 0 || !contractId) {
+		fail(
+			`Error: invalid --contract "${value}".\n` +
+				"  Expected name:CONTRACT_ID, e.g. --contract token:CXXX",
+		)
+	}
+	return [name, contractId]
 }
 
 export type ServerConfig = {
@@ -63,10 +100,8 @@ export function resolveConfig(): ServerConfig {
 		const next = args[i + 1]
 
 		if (arg === "--contract" && next) {
-			const sep = next.indexOf(":")
-			if (sep > 0) {
-				cliContracts[next.slice(0, sep)] = next.slice(sep + 1)
-			}
+			const [name, contractId] = parseContract(next)
+			cliContracts[name] = contractId
 			i++
 		} else if (arg === "--network" && next) {
 			cliNetwork = next
@@ -81,7 +116,7 @@ export function resolveConfig(): ServerConfig {
 			cliPassphrase = next
 			i++
 		} else if (arg === "--port" && next) {
-			cliPort = parseInt(next, 10)
+			cliPort = parsePort(next)
 			i++
 		}
 	}
@@ -104,32 +139,28 @@ export function resolveConfig(): ServerConfig {
 			: (fileConfig.contracts ?? {})
 	const port = cliPort ?? fileConfig.port ?? 4000
 
-	const baseNetwork = KNOWN_NETWORKS[networkName] ?? {
-		...KNOWN_NETWORKS.local,
-		id: networkName as NetworkType,
-		label: networkName,
+	if (!isNetworkType(networkName)) {
+		fail(
+			`Error: unknown network "${networkName}".\n` +
+				`  Expected one of: ${NETWORK_NAMES.join(", ")}\n` +
+				"  Override individual endpoints with --rpc-url / --horizon-url / --passphrase.",
+		)
 	}
+	const baseNetwork = KNOWN_NETWORKS[networkName]
 
 	const network: Network = {
 		...baseNetwork,
-		...(cliRpcUrl || fileConfig.rpcUrl
-			? { rpcUrl: cliRpcUrl ?? fileConfig.rpcUrl! }
-			: {}),
-		...(cliHorizonUrl || fileConfig.horizonUrl
-			? { horizonUrl: cliHorizonUrl ?? fileConfig.horizonUrl! }
-			: {}),
-		...(cliPassphrase || fileConfig.passphrase
-			? { passphrase: cliPassphrase ?? fileConfig.passphrase! }
-			: {}),
+		rpcUrl: cliRpcUrl ?? fileConfig.rpcUrl ?? baseNetwork.rpcUrl,
+		horizonUrl: cliHorizonUrl ?? fileConfig.horizonUrl ?? baseNetwork.horizonUrl,
+		passphrase: cliPassphrase ?? fileConfig.passphrase ?? baseNetwork.passphrase,
 	}
 
 	if (Object.keys(contracts).length === 0) {
-		console.error(
+		fail(
 			"Error: no contracts specified.\n" +
 				"  Use --contract name:CONTRACT_ID, or add a contract-explorer.json file.\n" +
 				"  Example: npx contract-explorer --contract token:CXXX --contract nft:CYYY",
 		)
-		process.exit(1)
 	}
 
 	return { contracts, network, port }
