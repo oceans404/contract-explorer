@@ -2,7 +2,7 @@
 	"extends": "./tsconfig.json",
 	"include": ["tests/**/*.ts", "tests/**/*.tsx"],
 	"compilerOptions": {
-		"types": ["vitest/globals", "@testing-library/jest-dom"]
+		"types": ["@testing-library/jest-dom/vitest"]
 	},
 	"exclude": ["node_modules", "dist"]
 }
