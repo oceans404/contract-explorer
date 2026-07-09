@@ -6,6 +6,8 @@
  * Run `npm run build` before running these tests.
  */
 import { spawn, type ChildProcess } from "child_process"
+import { mkdtempSync, rmSync } from "fs"
+import { tmpdir } from "os"
 import { join } from "path"
 import { Asset } from "@stellar/stellar-sdk"
 import { describe, it, expect, beforeAll, afterAll } from "vitest"
@@ -17,6 +19,12 @@ const XLM_CONTRACT_ID = Asset.native().contractId(PASSPHRASE)
 const SERVER_BIN = join(process.cwd(), "dist/server/index.cjs")
 
 let serverProcess: ChildProcess
+/**
+ * resolveConfig reads ./contract-explorer.json from the process cwd, and
+ * developers are told to create one at the repo root. Spawn the server in an
+ * empty directory so these assertions test the CLI flags, not the local file.
+ */
+let emptyCwd: string
 
 async function waitForServer(retries = 20): Promise<void> {
 	for (let i = 0; i < retries; i++) {
@@ -32,6 +40,7 @@ async function waitForServer(retries = 20): Promise<void> {
 }
 
 beforeAll(async () => {
+	emptyCwd = mkdtempSync(join(tmpdir(), "contract-explorer-e2e-"))
 	serverProcess = spawn(
 		"node",
 		[
@@ -43,13 +52,14 @@ beforeAll(async () => {
 			"--port",
 			String(PORT),
 		],
-		{ stdio: "pipe" },
+		{ stdio: "pipe", cwd: emptyCwd },
 	)
 	await waitForServer()
 })
 
 afterAll(() => {
 	serverProcess?.kill()
+	if (emptyCwd) rmSync(emptyCwd, { recursive: true, force: true })
 })
 
 describe("dev server (E2E)", () => {
