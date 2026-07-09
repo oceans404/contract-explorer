@@ -36,6 +36,11 @@ jobs:
       - name: 🔍 Validate
         run: npm run prepack
 
+      # E2E is deliberately not run here: it boots Docker and would let a slow
+      # container block a publish. PRs into main gate on the CI workflow.
+      - name: 🧪 Test
+        run: npm test
+
   release:
     name: 🚀 Release
     needs: [validate]

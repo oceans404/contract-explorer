@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: 🔍 Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false # better for libraries
+
+      - name: 🔍 Validate
+        run: npm run prepack
+
+  test:
+    name: 🧪 Unit + component tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false # better for libraries
+
+      - name: 🧪 Test
+        run: npm test
+
+  e2e:
+    name: 🌐 E2E tests
+    runs-on: ubuntu-latest
+    # pulls the quickstart image and boots a local Stellar node
+    timeout-minutes: 25
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+
+      # pinned here, unlike the other jobs: this run already depends on Docker and
+      # a container boot, so a red result should never also mean "a transitive dep
+      # moved". The validate/test jobs cover fresh-resolution drift.
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: true
+
+      # tests/e2e/globalSetup.ts shells out to `stellar container start`, and the
+      # counter.wasm fixture needs a protocol 27 node, so the CLI major must match
+      - name: 🌟 Install stellar CLI
+        uses: stellar/stellar-cli@v27.0.0
+
+      # tests/e2e/server.test.ts spawns dist/server/index.cjs
+      - name: 🏗️ Build
+        run: npm run build
+
+      - name: 🌐 E2E
+        run: npm run test:e2e
