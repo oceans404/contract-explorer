@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { Client } from "@stellar/stellar-sdk/contract"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { loadContractsFromNetwork } from "../../../src/util/loadContractsFromNetwork"
 import counterClient from "../../fixtures/counter"
 
@@ -33,7 +33,8 @@ describe("loadContractsFromNetwork", () => {
 	})
 
 	it("calls Client.from with correct options", async () => {
-		const contractId = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
+		const contractId =
+			"CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
 		await loadContractsFromNetwork({ counter: contractId }, localNetwork)
 		expect(mockFrom).toHaveBeenCalledWith({
 			contractId,

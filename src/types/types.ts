@@ -114,9 +114,7 @@ export type AssetObject = {
 	id: AssetType
 	label: string
 	value:
-		| AssetObjectValue
-		| AssetPoolShareObjectValue
-		| AssetSinglePoolShareValue
+		AssetObjectValue | AssetPoolShareObjectValue | AssetSinglePoolShareValue
 }
 
 export type AssetError = {
@@ -173,11 +171,7 @@ export type SubmitRpcResponse = {
 }
 
 export type SubmitRpcErrorStatus =
-	| "TIMEOUT"
-	| "FAILED"
-	| "DUPLICATE"
-	| "TRY_AGAIN_LATER"
-	| "ERROR"
+	"TIMEOUT" | "FAILED" | "DUPLICATE" | "TRY_AGAIN_LATER" | "ERROR"
 
 export type SubmitRpcError = {
 	status: SubmitRpcErrorStatus
@@ -312,20 +306,13 @@ export type JsonSchemaFormProps = {
 }
 
 export type SponsorshipType =
-	| "account"
-	| "trustline"
-	| "offer"
-	| "data"
-	| "claimable_balance"
-	| "signer"
+	"account" | "trustline" | "offer" | "data" | "claimable_balance" | "signer"
 
 // =============================================================================
 // Soroban Operations
 // =============================================================================
 export type SorobanOpType =
-	| "extend_footprint_ttl"
-	| "restore_footprint"
-	| "invoke_contract_function"
+	"extend_footprint_ttl" | "restore_footprint" | "invoke_contract_function"
 
 export type SorobanInvokeValue = {
 	contract_id: string

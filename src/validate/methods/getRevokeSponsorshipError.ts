@@ -44,9 +44,7 @@ export const getRevokeSponsorshipError = (
 				account_id: getPublicKeyError(value.data.account_id as string),
 				asset: getAssetError(
 					value.data.asset as
-						| undefined
-						| AssetObjectValue
-						| AssetPoolShareObjectValue,
+						undefined | AssetObjectValue | AssetPoolShareObjectValue,
 				),
 			}
 			break

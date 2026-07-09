@@ -4,8 +4,8 @@
 // `instanceof Uint8Array`. Under jsdom, Uint8Array lives in a separate
 // realm from Node's Buffer, so that check fails — run this file in the
 // plain node environment instead, since it doesn't touch the DOM.
-import { describe, it, expect } from "vitest"
 import { Keypair } from "@stellar/stellar-sdk"
+import { describe, it, expect } from "vitest"
 import { validate } from "../../../src/validate"
 
 // Representative sample — all validate functions follow the same pattern.
@@ -57,8 +57,7 @@ describe("getPublicKeyError", () => {
 })
 
 describe("getContractIdError", () => {
-	const VALID_ID =
-		"CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
+	const VALID_ID = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
 
 	it("returns false for a valid contract ID", () => {
 		expect(validate.getContractIdError(VALID_ID)).toBe(false)
@@ -66,7 +65,11 @@ describe("getContractIdError", () => {
 
 	it("rejects invalid contract IDs", () => {
 		expect(validate.getContractIdError("notacontract")).toBeTruthy()
-		expect(validate.getContractIdError("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN")).toBeTruthy()
+		expect(
+			validate.getContractIdError(
+				"GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN",
+			),
+		).toBeTruthy()
 		expect(validate.getContractIdError("")).toBeTruthy()
 	})
 })
@@ -76,8 +79,12 @@ describe("getI128Error", () => {
 		expect(validate.getI128Error("0")).toBe(false)
 		expect(validate.getI128Error("1000")).toBe(false)
 		expect(validate.getI128Error("-1")).toBe(false)
-		expect(validate.getI128Error("170141183460469231731687303715884105727")).toBe(false)
-		expect(validate.getI128Error("-170141183460469231731687303715884105728")).toBe(false)
+		expect(
+			validate.getI128Error("170141183460469231731687303715884105727"),
+		).toBe(false)
+		expect(
+			validate.getI128Error("-170141183460469231731687303715884105728"),
+		).toBe(false)
 	})
 
 	it("returns false for empty input when not required", () => {
@@ -89,8 +96,12 @@ describe("getI128Error", () => {
 	})
 
 	it("rejects values outside i128 range", () => {
-		expect(validate.getI128Error("170141183460469231731687303715884105728")).toBeTruthy()
-		expect(validate.getI128Error("-170141183460469231731687303715884105729")).toBeTruthy()
+		expect(
+			validate.getI128Error("170141183460469231731687303715884105728"),
+		).toBeTruthy()
+		expect(
+			validate.getI128Error("-170141183460469231731687303715884105729"),
+		).toBeTruthy()
 	})
 
 	it("rejects non-integer values", () => {

@@ -3,14 +3,15 @@
 // Under jsdom, vi.mock("fs") only patches the binding this test file sees —
 // it doesn't propagate to fs imported by src/server/config.ts. Plain node
 // env doesn't have that problem, and this file doesn't touch the DOM anyway.
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { existsSync, readFileSync } from "fs"
+import type * as fs from "fs"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { resolveConfig } from "../../../src/server/config"
 
 // vi.mock is hoisted above imports by vitest, so resolveConfig will see
 // the mocked fs from the very first call
 vi.mock("fs", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("fs")>()
+	const actual = await importOriginal<typeof fs>()
 	return {
 		...actual,
 		existsSync: vi.fn(() => false),

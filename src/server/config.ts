@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "fs"
 import { resolve } from "path"
-import type { Network, NetworkType } from "../types/types"
+import { type Network, type NetworkType } from "../types/types"
 
 const KNOWN_NETWORKS: Record<string, Network> = {
 	local: {

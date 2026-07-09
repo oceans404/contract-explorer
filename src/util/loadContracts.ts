@@ -45,7 +45,8 @@ export const loadContracts = async (
 		if (filename === "util") continue
 
 		try {
-			if (!(importFn instanceof Function)) throw new Error("Invalid import function")
+			if (!(importFn instanceof Function))
+				throw new Error("Invalid import function")
 
 			const module = await importFn()
 

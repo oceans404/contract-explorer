@@ -1,5 +1,5 @@
-import { createServer } from "http"
 import { readFileSync } from "fs"
+import { createServer } from "http"
 import { join } from "path"
 import { resolveConfig } from "./config"
 
@@ -55,12 +55,16 @@ const server = createServer((req, res) => {
 })
 
 server.listen(config.port, "localhost", () => {
-	console.log(`\nContract Explorer running at http://localhost:${config.port}\n`)
+	console.log(
+		`\nContract Explorer running at http://localhost:${config.port}\n`,
+	)
 	console.log(`  Network:   ${config.network.label} (${config.network.rpcUrl})`)
 	console.log(
 		`  Contracts: ${Object.entries(config.contracts)
 			.map(([name, id]) => `${name} (${id})`)
 			.join(", ")}`,
 	)
-	console.log("\nOpen the URL above in your browser to explore your contracts.\n")
+	console.log(
+		"\nOpen the URL above in your browser to explore your contracts.\n",
+	)
 })

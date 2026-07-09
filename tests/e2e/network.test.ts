@@ -2,10 +2,10 @@
  * E2E tests — require a running local Stellar network.
  * Start one with: stellar network start local
  */
-import { describe, it, expect, beforeAll } from "vitest"
 import { Asset } from "@stellar/stellar-sdk"
+import { describe, it, expect, beforeAll } from "vitest"
+import { type Network } from "../../src/types/types"
 import { loadContractsFromNetwork } from "../../src/util/loadContractsFromNetwork"
-import type { Network } from "../../src/types/types"
 
 const LOCAL_NETWORK: Network = {
 	id: "local",

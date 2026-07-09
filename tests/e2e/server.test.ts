@@ -5,11 +5,10 @@
  * These tests spawn the compiled server binary and hit its HTTP endpoints.
  * Run `npm run build` before running these tests.
  */
-import { describe, it, expect, beforeAll, afterAll } from "vitest"
-import { spawn } from "child_process"
-import type { ChildProcess } from "child_process"
-import { Asset } from "@stellar/stellar-sdk"
+import { spawn, type ChildProcess } from "child_process"
 import { join } from "path"
+import { Asset } from "@stellar/stellar-sdk"
+import { describe, it, expect, beforeAll, afterAll } from "vitest"
 
 const PORT = 4099
 const BASE_URL = `http://localhost:${PORT}`
@@ -68,7 +67,7 @@ describe("dev server (E2E)", () => {
 		expect(res.ok).toBe(true)
 		expect(res.headers.get("content-type")).toMatch("text/html")
 		const html = await res.text()
-		expect(html).toContain("<div id=\"root\">")
+		expect(html).toContain('<div id="root">')
 	})
 
 	it("GET /app.js returns JavaScript", async () => {

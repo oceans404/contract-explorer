@@ -1,6 +1,6 @@
+import { Client } from "@stellar/stellar-sdk/contract"
 import { describe, it, expect } from "vitest"
 import { loadContracts } from "../../../src/util/loadContracts"
-import { Client } from "@stellar/stellar-sdk/contract"
 import counterClient from "../../fixtures/counter"
 
 describe("loadContracts", () => {

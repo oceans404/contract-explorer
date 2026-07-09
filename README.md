@@ -56,14 +56,7 @@ We also provide an alternative style in a modal that you can toggle with a
 floating button, similar to the TanStack Query DevTools. It works exactly the
 same as the default component but allows a few more props for customization:
 
-```js
-import {
-	ContractExplorerModal,
-	loadContracts,
-} from "@theahaco/contract-explorer"
-
-// Load contracts and get wallet props as above
-
+```jsx
 <ContractExplorerModal
 	placement="left"
 	initialIsOpen={false}

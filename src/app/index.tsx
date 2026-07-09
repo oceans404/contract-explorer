@@ -1,10 +1,10 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import * as React from "react"
 import { createRoot } from "react-dom/client"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ContractExplorer } from "../components/ContractExplorer"
+import { type Network } from "../types/types"
+import { type Contracts } from "../util/loadContracts"
 import { loadContractsFromNetwork } from "../util/loadContractsFromNetwork"
-import type { Network } from "../types/types"
-import type { Contracts } from "../util/loadContracts"
 
 const queryClient = new QueryClient()
 

@@ -1,6 +1,6 @@
 import { Client } from "@stellar/stellar-sdk/contract"
-import type { ContractMap, Contracts } from "./loadContracts"
-import type { Network } from "../types/types"
+import { type Network } from "../types/types"
+import { type ContractMap, type Contracts } from "./loadContracts"
 
 /**
  * Load contracts from the network by fetching their specs via RPC.

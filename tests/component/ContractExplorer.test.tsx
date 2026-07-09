@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest"
-import { render, screen } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { render, screen } from "@testing-library/react"
+import { describe, it, expect } from "vitest"
 import { ContractExplorer } from "../../src/components/ContractExplorer"
+import { type Network } from "../../src/types/types"
+import { type Contracts } from "../../src/util/loadContracts"
 import counterClient from "../fixtures/counter"
-import type { Network } from "../../src/types/types"
-import type { Contracts } from "../../src/util/loadContracts"
 
 const network: Network = {
 	id: "local",
@@ -33,9 +33,7 @@ describe("ContractExplorer", () => {
 		render(<ContractExplorer contracts={contracts} network={network} />, {
 			wrapper: Wrapper,
 		})
-		expect(
-			screen.getByRole("button", { name: "counter" }),
-		).toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "counter" })).toBeInTheDocument()
 	})
 
 	it("renders the contract functions", () => {
