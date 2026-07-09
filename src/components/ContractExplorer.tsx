@@ -119,12 +119,6 @@ export function ContractExplorer({
 				</Layout.Inset>
 
 				{/* Show error or contract details */}
-				{!contract && (
-					<Layout.Inset>
-						<p>No contract selected or contract not found.</p>
-					</Layout.Inset>
-				)}
-
 				{isFailed && contracts.failed[selectedContract] && (
 					<Layout.Inset>
 						<h2>{selectedContract}</h2>

@@ -44,6 +44,20 @@ describe("ContractExplorer", () => {
 		expect(screen.getByText("get_count")).toBeInTheDocument()
 	})
 
+	it("shows only the failure reason for a contract that failed to load", () => {
+		const withFailure: Contracts = {
+			loaded: {},
+			failed: { counter: "Invalid contract module" },
+			contractNames: ["counter"],
+		}
+		render(<ContractExplorer contracts={withFailure} network={network} />, {
+			wrapper: Wrapper,
+		})
+		expect(screen.getByText(/invalid contract module/i)).toBeInTheDocument()
+		// a contract IS selected, so the old "no contract selected" copy must not appear
+		expect(screen.queryByText(/no contract selected/i)).not.toBeInTheDocument()
+	})
+
 	it("renders a message when no contracts are loaded", () => {
 		const empty: Contracts = { loaded: {}, failed: {}, contractNames: [] }
 		render(<ContractExplorer contracts={empty} network={network} />, {
