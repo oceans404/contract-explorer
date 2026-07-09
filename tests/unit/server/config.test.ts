@@ -210,3 +210,78 @@ describe("resolveConfig — config file", () => {
 		expect(config.port).toBe(5000)
 	})
 })
+
+// Endpoint fields resolve as: CLI flag ?? config file ?? network preset.
+describe("resolveConfig — endpoint override precedence", () => {
+	const withFile = (fileConfig: Record<string, unknown>) => {
+		mockExistsSync.mockReturnValue(true)
+		mockReadFileSync.mockReturnValue(
+			JSON.stringify({ contracts: { token: "CXXX" }, ...fileConfig }),
+		)
+	}
+
+	it("falls back to the network preset when nothing overrides it", () => {
+		withFile({ network: "testnet" })
+		const config = resolveConfig()
+		expect(config.network.rpcUrl).toBe("https://soroban-testnet.stellar.org")
+		expect(config.network.horizonUrl).toBe(
+			"https://horizon-testnet.stellar.org",
+		)
+		expect(config.network.passphrase).toBe("Test SDF Network ; September 2015")
+	})
+
+	it("config file endpoints override the network preset", () => {
+		withFile({
+			network: "testnet",
+			rpcUrl: "https://file.example/rpc",
+			horizonUrl: "https://file.example/horizon",
+			passphrase: "File Passphrase",
+		})
+		const config = resolveConfig()
+		// the preset still decides the id, only the endpoints are replaced
+		expect(config.network.id).toBe("testnet")
+		expect(config.network.rpcUrl).toBe("https://file.example/rpc")
+		expect(config.network.horizonUrl).toBe("https://file.example/horizon")
+		expect(config.network.passphrase).toBe("File Passphrase")
+	})
+
+	it("CLI endpoint flags override the config file", () => {
+		withFile({
+			network: "testnet",
+			rpcUrl: "https://file.example/rpc",
+			horizonUrl: "https://file.example/horizon",
+			passphrase: "File Passphrase",
+		})
+		process.argv = [
+			"node",
+			"index.js",
+			"--rpc-url",
+			"https://cli.example/rpc",
+			"--horizon-url",
+			"https://cli.example/horizon",
+			"--passphrase",
+			"CLI Passphrase",
+		]
+		const config = resolveConfig()
+		expect(config.network.rpcUrl).toBe("https://cli.example/rpc")
+		expect(config.network.horizonUrl).toBe("https://cli.example/horizon")
+		expect(config.network.passphrase).toBe("CLI Passphrase")
+	})
+
+	it("overrides each endpoint independently", () => {
+		withFile({ network: "testnet", horizonUrl: "https://file.example/horizon" })
+		process.argv = ["node", "index.js", "--rpc-url", "https://cli.example/rpc"]
+		const config = resolveConfig()
+		expect(config.network.rpcUrl).toBe("https://cli.example/rpc") // from CLI
+		expect(config.network.horizonUrl).toBe("https://file.example/horizon") // from file
+		expect(config.network.passphrase).toBe("Test SDF Network ; September 2015") // from preset
+	})
+
+	it("CLI --network selects the preset even when the file names another", () => {
+		withFile({ network: "local" })
+		process.argv = ["node", "index.js", "--network", "testnet"]
+		const config = resolveConfig()
+		expect(config.network.id).toBe("testnet")
+		expect(config.network.rpcUrl).toBe("https://soroban-testnet.stellar.org")
+	})
+})

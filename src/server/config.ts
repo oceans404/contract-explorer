@@ -151,8 +151,10 @@ export function resolveConfig(): ServerConfig {
 	const network: Network = {
 		...baseNetwork,
 		rpcUrl: cliRpcUrl ?? fileConfig.rpcUrl ?? baseNetwork.rpcUrl,
-		horizonUrl: cliHorizonUrl ?? fileConfig.horizonUrl ?? baseNetwork.horizonUrl,
-		passphrase: cliPassphrase ?? fileConfig.passphrase ?? baseNetwork.passphrase,
+		horizonUrl:
+			cliHorizonUrl ?? fileConfig.horizonUrl ?? baseNetwork.horizonUrl,
+		passphrase:
+			cliPassphrase ?? fileConfig.passphrase ?? baseNetwork.passphrase,
 	}
 
 	if (Object.keys(contracts).length === 0) {
