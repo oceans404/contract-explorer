@@ -43,6 +43,30 @@ describe("loadContracts", () => {
 		expect(result.contractNames).not.toContain("util")
 	})
 
+	it("reports a duplicate basename instead of silently overwriting", async () => {
+		const modules = {
+			"../contracts/a/counter.ts": async () => ({ default: counterClient }),
+			"../contracts/b/counter.ts": async () => ({ default: counterClient }),
+		}
+		const result = await loadContracts(modules)
+		expect(result.failed.counter).toMatch(/duplicate contract name/i)
+		expect(result.loaded.counter).toBeUndefined()
+		// the name must appear exactly once — it is used as a React key
+		expect(result.contractNames).toEqual(["counter"])
+	})
+
+	it("does not leave a duplicate name in both loaded and failed", async () => {
+		const modules = {
+			"../contracts/a/counter.ts": async () => ({ default: counterClient }),
+			"../contracts/b/counter.ts": async () => {
+				throw new Error("boom")
+			},
+		}
+		const result = await loadContracts(modules)
+		expect(Object.keys(result.loaded)).not.toContain("counter")
+		expect(result.contractNames).toEqual(["counter"])
+	})
+
 	it("handles a mix of loaded and failed modules", async () => {
 		const modules = {
 			"../contracts/counter.ts": async () => ({ default: counterClient }),

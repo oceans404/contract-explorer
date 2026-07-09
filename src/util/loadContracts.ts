@@ -12,6 +12,20 @@ export type Contracts = {
 	contractNames: string[]
 }
 
+/**
+ * Assemble the `Contracts` result shared by every loader. Callers guarantee a
+ * name lands in `loaded` or `failed` but never both, so the names need no
+ * deduping — they are used as React keys.
+ */
+export const toContracts = (
+	loaded: ContractMap,
+	failed: Record<string, string>,
+): Contracts => ({
+	loaded,
+	failed,
+	contractNames: [...Object.keys(loaded), ...Object.keys(failed)],
+})
+
 const isContractModule = (module: unknown): module is ContractModule => {
 	return (
 		typeof module === "object" &&
@@ -37,12 +51,26 @@ export const loadContracts = async (
 ): Promise<Contracts> => {
 	const loaded: ContractMap = {}
 	const failed: Record<string, string> = {}
+	/** filename -> the module path that claimed it, to detect collisions */
+	const claimedBy: Record<string, string> = {}
 
 	for (const [path, importFn] of Object.entries(contractModules)) {
 		const filename = path.split("/").pop()?.replace(".ts", "") || ""
 
 		// TODO: remove util.ts from contract module directory for ease of loading
 		if (filename === "util") continue
+
+		// Contracts are normally a single flat directory, but a recursive glob or a
+		// hand-built module map can yield two paths with the same basename. Report
+		// that rather than letting the later module silently overwrite the earlier.
+		const claimed = claimedBy[filename]
+		if (claimed) {
+			delete loaded[filename]
+			failed[filename] =
+				`Duplicate contract name, defined by both ${claimed} and ${path}`
+			continue
+		}
+		claimedBy[filename] = path
 
 		try {
 			if (!(importFn instanceof Function))
@@ -58,7 +86,5 @@ export const loadContracts = async (
 		}
 	}
 
-	const contractNames = [...Object.keys(loaded), ...Object.keys(failed)]
-
-	return { loaded, failed, contractNames }
+	return toContracts(loaded, failed)
 }
