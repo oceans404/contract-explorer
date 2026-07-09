@@ -1,4 +1,5 @@
 import { Client } from "@stellar/stellar-sdk/contract"
+import { errorMessage } from "./errorMessage"
 
 type ContractModule = {
 	default: Client
@@ -82,7 +83,7 @@ export const loadContracts = async (
 
 			loaded[filename] = module
 		} catch (error) {
-			failed[filename] = error instanceof Error ? error.message : String(error)
+			failed[filename] = errorMessage(error)
 		}
 	}
 

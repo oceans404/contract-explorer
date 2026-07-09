@@ -1,6 +1,7 @@
 import { Client } from "@stellar/stellar-sdk/contract"
 import { type Network } from "../types/types"
 import { allowHttp } from "./allowHttp"
+import { errorMessage } from "./errorMessage"
 import { type ContractMap, type Contracts, toContracts } from "./loadContracts"
 
 /**
@@ -43,7 +44,7 @@ export const loadContractsFromNetwork = async (
 			loaded[name] = { default: result.value }
 		} else {
 			const error: unknown = result.reason
-			failed[name] = error instanceof Error ? error.message : String(error)
+			failed[name] = errorMessage(error)
 		}
 	})
 
