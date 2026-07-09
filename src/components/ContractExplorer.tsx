@@ -49,16 +49,6 @@ export function ContractExplorer({
 		}
 	}, [selectedContract, contracts, setSelectedContract])
 
-	if (!selectedContract) {
-		return (
-			<Layout.Content>
-				<Layout.Inset>
-					<p>Loading contracts...</p>
-				</Layout.Inset>
-			</Layout.Content>
-		)
-	}
-
 	if (contracts.contractNames.length === 0) {
 		return (
 			<Layout.Content>
@@ -81,6 +71,16 @@ export function ContractExplorer({
 						</a>{" "}
 						to interactively build your contract.
 					</p>
+				</Layout.Inset>
+			</Layout.Content>
+		)
+	}
+
+	if (!selectedContract) {
+		return (
+			<Layout.Content>
+				<Layout.Inset>
+					<p>Loading contracts...</p>
 				</Layout.Inset>
 			</Layout.Content>
 		)

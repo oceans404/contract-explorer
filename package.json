@@ -14,7 +14,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": {
     "contract-explorer": "./dist/server/index.cjs"
   },
@@ -23,6 +25,9 @@
     "dev": "npm run build && run-p -l dev:watch dev:server",
     "dev:watch": "tsup --watch",
     "dev:server": "node --watch dist/server/index.cjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "format": "prettier . --write",
     "lint": "eslint .",
     "prepack": "run-p -l format lint typecheck",
@@ -38,14 +43,18 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/lodash": "^4.17.20",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
+    "jsdom": "^29.0.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "@stellar/design-system": "^3.2.2",
@@ -65,7 +74,13 @@
     "type": "git",
     "url": "git+https://github.com/theahaco/contract-explorer.git"
   },
-  "keywords": ["stellar", "soroban", "smart contracts", "react", "dapp"],
+  "keywords": [
+    "stellar",
+    "soroban",
+    "smart contracts",
+    "react",
+    "dapp"
+  ],
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/theahaco/contract-explorer/issues"
