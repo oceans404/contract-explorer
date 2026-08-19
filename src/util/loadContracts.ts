@@ -1,4 +1,5 @@
 import { Client } from "@stellar/stellar-sdk/contract"
+import { errorMessage } from "./errorMessage"
 
 type ContractModule = {
 	default: Client
@@ -13,14 +14,19 @@ export type Contracts = {
 }
 
 /**
- * Type guard to narrow result to a function
+ * Assemble the `Contracts` result shared by every loader. Callers guarantee a
+ * name lands in `loaded` or `failed` but never both, so the names need no
+ * deduping — they are used as React keys.
  */
-const isFn = (fn: unknown): fn is (() => unknown) | (() => Promise<unknown>) =>
-	fn instanceof Function
+export const toContracts = (
+	loaded: ContractMap,
+	failed: Record<string, string>,
+): Contracts => ({
+	loaded,
+	failed,
+	contractNames: [...Object.keys(loaded), ...Object.keys(failed)],
+})
 
-/**
- * Type guard to narrow result to contract module
- */
 const isContractModule = (module: unknown): module is ContractModule => {
 	return (
 		typeof module === "object" &&
@@ -31,19 +37,11 @@ const isContractModule = (module: unknown): module is ContractModule => {
 }
 
 /**
- * In case function is synchronous, wrap result in a Promise so it can be awaited
- */
-async function safeAwait<T>(fn: (() => T) | (() => Promise<T>)): Promise<T> {
-	const result = fn()
-	return result instanceof Promise ? result : Promise.resolve(result)
-}
-
-/**
  * Load contracts from files
  *
  * @example
  * ```typescript
- * const modules = import.meta.glob("../contracts/*.ts", { eager: true })
+ * const modules = import.meta.glob("../contracts/*.ts")
  * const contracts = await loadContracts(modules)
  *
  * <ContractExplorer contracts={contracts} />
@@ -54,30 +52,40 @@ export const loadContracts = async (
 ): Promise<Contracts> => {
 	const loaded: ContractMap = {}
 	const failed: Record<string, string> = {}
+	/** filename -> the module path that claimed it, to detect collisions */
+	const claimedBy: Record<string, string> = {}
 
 	for (const [path, importFn] of Object.entries(contractModules)) {
-		debugger
 		const filename = path.split("/").pop()?.replace(".ts", "") || ""
 
 		// TODO: remove util.ts from contract module directory for ease of loading
-		if (filename && filename === "util") continue
+		if (filename === "util") continue
+
+		// Contracts are normally a single flat directory, but a recursive glob or a
+		// hand-built module map can yield two paths with the same basename. Report
+		// that rather than letting the later module silently overwrite the earlier.
+		const claimed = claimedBy[filename]
+		if (claimed) {
+			delete loaded[filename]
+			failed[filename] =
+				`Duplicate contract name, defined by both ${claimed} and ${path}`
+			continue
+		}
+		claimedBy[filename] = path
 
 		try {
-			if (!isFn(importFn)) throw new Error("Invalid import function")
+			if (!(importFn instanceof Function))
+				throw new Error("Invalid import function")
 
-			const module = await safeAwait(importFn)
+			const module = await importFn()
 
 			if (!isContractModule(module)) throw new Error("Invalid contract module")
 
 			loaded[filename] = module
 		} catch (error) {
-			failed[filename] = error instanceof Error ? error.message : String(error)
+			failed[filename] = errorMessage(error)
 		}
 	}
 
-	const contractNames = Array.from(
-		new Set([...Object.keys(loaded), ...Object.keys(failed)]),
-	)
-
-	return { loaded, failed, contractNames }
+	return toContracts(loaded, failed)
 }
